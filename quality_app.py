@@ -136,6 +136,16 @@ impact_model, tensile_model, impact_cols, tensile_cols = load_model_and_get_colu
 
 col_form, col_predict = st.columns([1.5, 1])
 
+# A dictionary to map integer values to additive functionality strings
+# 1: Toughener, 2: Impact Modifier, 3: Colorant, 4: Antioxidant, 5: Unknown
+additive_func_map = {
+    1: 'Toughener',
+    2: 'Impact Modifier',
+    3: 'Colorant',
+    4: 'Antioxidant',
+    5: 'Unknown'
+}
+
 with col_form:
     st.header("ثبت اطلاعات در دیتاست")
 
@@ -167,7 +177,10 @@ with col_form:
         st.markdown("**افزودنی‌ها**")
         a_type = st.selectbox("نوع افزودنی", options=[''] + unique_values['Additive_Type'], key="a_type")
         a_perc = st.number_input("درصد افزودنی", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="a_perc")
-        a_func = st.selectbox("عملکرد افزودنی", options=[''] + ['Toughener', 'Impact Modifier', 'Colorant', 'Antioxidant', 'Unknown'], key="a_func")
+        
+        # Changed to number input for integer values
+        a_func_int = st.number_input("عملکرد افزودنی (۱: Toughener, ۲: Impact Modifier, ۳: Colorant, ۴: Antioxidant, ۵: Unknown)", 
+                                  min_value=1, max_value=5, value=1, step=1, key="a_func")
         
         st.markdown("---")
         
@@ -185,6 +198,9 @@ with col_form:
 
         if submit_button:
             if df is not None:
+                # Convert integer input back to string for data saving
+                a_func = additive_func_map.get(a_func_int, 'Unknown')
+
                 new_data = {
                     "Polymer1_Type": p1_type, "Polymer1_Perc": p1_perc,
                     "Polymer2_Type": p2_type, "Polymer2_Perc": p2_perc,
@@ -235,7 +251,10 @@ with col_predict:
         st.markdown("**افزودنی‌ها**")
         a_type_p = st.selectbox("نوع افزودنی", options=[''] + unique_values['Additive_Type'], key="a_type_p")
         a_perc_p = st.number_input("درصد افزودنی", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="a_perc_p")
-        a_func_p = st.selectbox("عملکرد افزودنی", options=[''] + ['Toughener', 'Impact Modifier', 'Colorant', 'Antioxidant', 'Unknown'], key="a_func_p")
+
+        # Changed to number input for integer values
+        a_func_int_p = st.number_input("عملکرد افزودنی (۱: Toughener, ۲: Impact Modifier, ۳: Colorant, ۴: Antioxidant, ۵: Unknown)", 
+                                    min_value=1, max_value=5, value=1, step=1, key="a_func_p")
         
         st.markdown("---")
 
@@ -254,6 +273,8 @@ with col_predict:
 
         if predict_button:
             if impact_model is not None and tensile_model is not None:
+                # Convert integer input back to string for prediction
+                a_func_p = additive_func_map.get(a_func_int_p, 'Unknown')
                 data_to_predict = {
                     'Polymer1_Type': p1_type_p, 'Polymer1_Perc': p1_perc_p,
                     'Polymer2_Type': p2_type_p, 'Polymer2_Perc': p2_perc_p,
