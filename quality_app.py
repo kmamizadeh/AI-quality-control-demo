@@ -5,9 +5,9 @@ import os
 import numpy as np
 
 # --- Paths to the files. These should be relative to the script location.
-EXCEL_FILE = 'to_github/Polymer_Properties_Processed_by_python1.xlsx'
-IMPACT_MODEL_FILE = 'to_github/regression_model.pkl'
-TENSILE_MODEL_FILE = 'to_github/tensile_model.pkl'
+EXCEL_FILE = 'Polymer_Properties_Processed_by_python1.xlsx'
+IMPACT_MODEL_FILE = 'regression_model.pkl'
+TENSILE_MODEL_FILE = 'tensile_model.pkl'
 
 # --- Custom CSS for a modern, clean look ---
 st.markdown("""
@@ -321,3 +321,4 @@ with col_dashboard:
                         "💡 پیشنهاد: برای افزایش استحکام کششی، می‌توانید درصد فیلرها را افزایش دهید یا از یک پلیمر با مدول الاستیک بالاتر استفاده کنید.")
             else:
                 st.error("❌ پیش‌بینی انجام نشد. لطفاً ورودی‌های خود را بررسی کنید.")
+
