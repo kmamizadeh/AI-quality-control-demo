@@ -24,6 +24,16 @@ UNITS_TENSILE = {
     "Pa": "Pa"
 }
 
+# A dictionary to map integer values to additive functionality strings
+# 1: Toughener, 2: Impact Modifier, 3: Colorant, 4: Antioxidant, 5: Unknown
+additive_func_map = {
+    1: 'Toughener',
+    2: 'Impact Modifier',
+    3: 'Colorant',
+    4: 'Antioxidant',
+    5: 'Unknown'
+}
+
 # --- Data and Model Loading (with caching) ---
 @st.cache_data
 def load_data_and_get_unique_values():
@@ -90,28 +100,29 @@ def convert_tensile_to_base(value, unit):
 # --- Prediction Logic ---
 def predict_properties(data_to_predict, impact_model, tensile_model, impact_cols, tensile_cols):
     try:
-        # Create a single dataframe from the input dictionary
-        input_df = pd.DataFrame([data_to_predict])
+        # Prepare the input data with all possible columns for one-hot encoding
+        all_cols_impact_df = pd.DataFrame(columns=impact_cols, data=np.zeros((1, len(impact_cols))))
+        all_cols_tensile_df = pd.DataFrame(columns=tensile_cols, data=np.zeros((1, len(tensile_cols))))
 
-        # Convert categorical data to one-hot encoding
-        categorical_cols = ['Polymer1_Type', 'Polymer2_Type', 'Polymer3_Type', 
-                            'Filler1_Type', 'Filler2_Type', 'Additive_Type', 
-                            'Impact_Test_Type']
-        
-        input_encoded = pd.get_dummies(input_df, columns=categorical_cols)
+        # Function to safely update the dataframe with numerical and one-hot encoded values
+        def update_df(df_to_update, data_dict):
+            for key, value in data_dict.items():
+                if key in df_to_update.columns:
+                    # Update numerical columns
+                    df_to_update[key] = value
+                elif pd.isna(value) or value == '':
+                    # Do nothing if the value is empty or NaN
+                    continue
+                else:
+                    # Update one-hot encoded columns
+                    col_name = f"{key}_{value}"
+                    if col_name in df_to_update.columns:
+                        df_to_update[col_name] = 1
+            return df_to_update
 
-        # Ensure the column order matches the models' expected features
-        # For impact model
-        missing_impact_cols = set(impact_cols) - set(input_encoded.columns)
-        for c in missing_impact_cols:
-            input_encoded[c] = 0
-        df_impact = input_encoded[impact_cols]
-
-        # For tensile model
-        missing_tensile_cols = set(tensile_cols) - set(input_encoded.columns)
-        for c in missing_tensile_cols:
-            input_encoded[c] = 0
-        df_tensile = input_encoded[tensile_cols]
+        # Update both dataframes with the provided user data
+        df_impact = update_df(all_cols_impact_df, data_to_predict)
+        df_tensile = update_df(all_cols_tensile_df, data_to_predict)
 
         # Make predictions
         impact_pred = impact_model.predict(df_impact)[0]
@@ -135,16 +146,6 @@ df, unique_values = load_data_and_get_unique_values()
 impact_model, tensile_model, impact_cols, tensile_cols = load_model_and_get_columns()
 
 col_form, col_predict = st.columns([1.5, 1])
-
-# A dictionary to map integer values to additive functionality strings
-# 1: Toughener, 2: Impact Modifier, 3: Colorant, 4: Antioxidant, 5: Unknown
-additive_func_map = {
-    1: 'Toughener',
-    2: 'Impact Modifier',
-    3: 'Colorant',
-    4: 'Antioxidant',
-    5: 'Unknown'
-}
 
 with col_form:
     st.header("ثبت اطلاعات در دیتاست")
