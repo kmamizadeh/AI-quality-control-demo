@@ -420,3 +420,4 @@ for file in pdf_files:
         )
     except FileNotFoundError:
         st.warning(f"فایل {pdf_file_path} پیدا نشد. لطفاً آن را به پوشه پروژه اضافه کنید.")
+
