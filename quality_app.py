@@ -215,91 +215,6 @@ if df is not None:
     st.subheader("پیش‌نمایش دیتاست موجود")
     st.dataframe(df, use_container_width=True)
 
-# --- Data Entry Section ---
-st.markdown("---")
-st.header("📝 ثبت و مقایسه فرمولاسیون جدید")
-if unique_values:
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("**مشخصات فرمولاسیون**")
-        p1_type = st.selectbox("نوع پلیمر اول", options=[''] + list(unique_values['Polymer1_Type']), key="p1_type_form")
-        p1_perc = st.number_input("درصد پلیمر اول (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="p1_perc_form")
-        p2_type = st.selectbox("نوع پلیمر دوم", options=[''] + list(unique_values['Polymer2_Type']), key="p2_type_form")
-        p2_perc = st.number_input("درصد پلیمر دوم (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="p2_perc_form")
-        p3_type = st.selectbox("نوع پلیمر سوم", options=[''] + list(unique_values['Polymer3_Type']), key="p3_type_form")
-        p3_perc = st.number_input("درصد پلیمر سوم (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="p3_perc_form")
-
-        st.markdown("**فیلرها**")
-        f1_type = st.selectbox("نوع فیلر اول", options=[''] + list(unique_values['Filler1_Type']), key="f1_type_form")
-        f1_size = st.number_input("اندازه ذرات فیلر اول (میکرون)", min_value=0.0, key="f1_size_form")
-        f1_perc = st.number_input("درصد فیلر اول (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="f1_perc_form")
-        f2_type = st.selectbox("نوع فیلر دوم", options=[''] + list(unique_values['Filler2_Type']), key="f2_type_form")
-        f2_size = st.number_input("اندازه ذرات فیلر دوم (میکرون)", min_value=0.0, key="f2_size_form")
-        f2_perc = st.number_input("درصد فیلر دوم (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="f2_perc_p")
-    
-    with col2:
-        st.markdown("**افزودنی‌ها**")
-        a_type = st.selectbox("نوع افزودنی", options=[''] + list(unique_values['Additive_Type']), key="a_type_form")
-        a_perc = st.number_input("درصد افزودنی (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="a_perc_form")
-        a_func = st.selectbox("عملکرد افزودنی", options=[''] + ['Toughener', 'Impact Modifier', 'Colorant', 'Antioxidant', 'Unknown'], key="a_func_form")
-
-        st.markdown("**خواص مکانیکی**")
-        impact_test_type = st.selectbox("نوع آزمون ضربه", options=[''] + ['Charpy', 'Izod'], key="impact_test_type_entry_form")
-        impact_not_break = st.checkbox("شکسته نشد (No break)", key="impact_not_break_form")
-        impact_value = st.number_input(f"خواص ضربه (J/m)", min_value=0.0, key="impact_value_form")
-        tensile_value = st.number_input("استحکام کششی (MPa)", min_value=0.0, key="tensile_value_form")
-    
-    submit_button = st.button(label='💾 ثبت اطلاعات و مقایسه', key="submit_btn")
-
-    if submit_button:
-        new_data = {
-            "Polymer1_Type": p1_type, "Polymer1_Perc": p1_perc,
-            "Polymer2_Type": p2_type, "Polymer2_Perc": p2_perc,
-            "Polymer3_Type": p3_type, "Polymer3_Perc": p3_perc,
-            "Filler1_Type": f1_type, "Filler1_ParticleSize_um": f1_size, "Filler1_Perc": f1_perc,
-            "Filler2_Type": f2_type, "Filler2_ParticleSize_um": f2_size, "Filler2_Perc": f2_perc,
-            "Additive_Type": a_type, "Additive_Perc": a_perc, "Additive_Functionality": a_func,
-            "Impact_Test_Type": impact_test_type, "Impact_Not_Break": impact_not_break,
-            "Impact_Value_Jm": impact_value,
-            "Tensile_Value_MPa": tensile_value
-        }
-        
-        # Check if all required fields are filled
-        required_fields = ["Polymer1_Type", "Polymer1_Perc", "Tensile_Value_MPa", "Impact_Value_Jm"]
-        if any(new_data[k] == '' or new_data[k] is None for k in required_fields):
-            st.error("❌ لطفاً حداقل فیلدهای اجباری (نوع پلیمر اول، درصد پلیمر اول، خواص کششی و ضربه) را پر کنید.")
-        else:
-            try:
-                # Append new data to the DataFrame and save it
-                updated_df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
-                updated_df.to_excel('Polymer_Properties_Processed_by_python1.xlsx', index=False)
-                
-                # Find the best match and display results
-                st.subheader("🔍 نتایج مقایسه و پیشنهاد")
-                best_match, best_match_index, distance = find_best_match(new_data, df)
-                
-                if best_match is not None:
-                    st.success("✅ اطلاعات با موفقیت ثبت شد و مقایسه انجام شد!")
-                    st.markdown(f"**بهترین فرمولاسیون مشابه در دیتاست شما:** (ردیف {best_match_index + 2})")
-                    
-                    # Display the comparison table
-                    comparison_df = pd.DataFrame([new_data, best_match]).T
-                    comparison_df.columns = ['فرمولاسیون جدید', 'بهترین فرمولاسیون مشابه']
-                    
-                    st.dataframe(comparison_df, use_container_width=True)
-                    
-                    st.markdown("---")
-                    
-                    st.info(f"**پیشنهاد:** فرمولاسیون جدید شما به لحاظ ترکیب، بسیار به فرمولاسیون ردیف {best_match_index + 2} در دیتاست شما نزدیک است. نتایج مکانیکی (خواص ضربه و کششی) آن‌ها را با هم مقایسه کنید تا در صورت نیاز بهینه‌سازی‌های لازم را انجام دهید.")
-                else:
-                    st.warning("دیتاست موجود خالی است. لطفاً ابتدا چند مورد ثبت کنید.")
-                    
-            except Exception as e:
-                st.error(f"❌ خطا در ثبت اطلاعات یا مقایسه: {e}")
-else:
-    st.warning("فایلی برای نمایش وجود ندارد. لطفاً ابتدا یک فایل اکسل آپلود کنید.")
-
 # --- Prediction and Suggestion Section ---
 st.markdown("---")
 st.header("🔮 پیش‌بینی خواص و ارائه پیشنهاد")
@@ -330,6 +245,7 @@ elif unique_values:
             a_func_pred = st.selectbox("عملکرد افزودنی", options=[''] + ['Toughener', 'Impact Modifier', 'Colorant', 'Antioxidant', 'Unknown'], key="a_func_pred")
             impact_test_type_pred = st.selectbox("نوع آزمون ضربه", options=[''] + ['Charpy', 'Izod'], key="impact_test_type_pred")
             target_tensile = st.number_input("مقاومت کششی هدف (MPa)", min_value=0.0, key="target_tensile")
+            target_impact = st.number_input("مقاومت ضربه هدف (J/m)", min_value=0.0, key="target_impact")
 
         predict_button = st.form_submit_button(label='🔮 پیش‌بینی خواص')
 
